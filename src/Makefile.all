@@ -1,0 +1,12 @@
+my_rpgpoll : my_rpgpoll.o rpghash.o rpgsnmp.o
+	gcc -std=c99 -g -o my_rpgpoll my_rpgpoll.o rpgutil.o rpghash.o rpgsnmp.o -L /usr/local/net-snmp/lib/ -lnetsnmp -lpthread
+my_rpgpoll.o :  my_rpgpoll.c rpgsnmp.c rpgutil.c
+	gcc -std=c99 -c my_rpgpoll.c
+rpgutil.o : rpgutil.c
+	gcc -c rpgutil.c
+rpghash.o : rpghash.c rpgutil.o
+	gcc -c rpghash.c
+rpgsnmp.o : rpgsnmp.c rpgutil.o
+	gcc -c rpgsnmp.c -I /usr/local/net-snmp/include/
+clean:
+	rm *.o my_rpgpoll
