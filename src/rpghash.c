@@ -114,7 +114,7 @@ void *hash_target_file(void *arg)
 void *hash_target_file2(void *arg)
 {
     crew_t *crew = (crew_t *)arg;
-    char *file = "/home/apple/workplace/rpg-0.0.1/src/config.txt";
+    char *file = "/home/apple/workplace/rpg/src/config.txt";
     FILE *fp;
     target_t *new = NULL;
     char buffer[BUFSIZE];

@@ -21,7 +21,5 @@
 
 #include <signal.h>
 
-#if HAVE_MYSQL
-# include <mysql.h>
-#endif
+# include "/usr/include/mysql/mysql.h"
 

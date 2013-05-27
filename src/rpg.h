@@ -16,6 +16,12 @@
 #define MAX_THREADS 10
 #define BUFSIZE 512
 
+/* Defaults */
+#define DEFAULT_DB_HOST "localhost"
+#define DEFAULT_DB_DB "rpg"
+#define DEFAULT_DB_USER "root"
+#define DEFAULT_DB_PASS "123"
+
 /* pthread error messages */
 #define PML_ERR "pthread_mutex_lock error\n"
 #define PMU_ERR "pthread_mutex_unlock error\n"
@@ -29,6 +35,10 @@
 #define PT_COND_WAIT(x,y) if (pthread_cond_wait(x, y) != 0) printf(PCW_ERR);
 #define PT_COND_BROAD(x) if (pthread_cond_broadcast(x) != 0) printf(PCB_ERR);
 #define PT_COND_SIGNAL(x) if (pthread_cond_signal(x) != 0) printf(PCS_ERR);
+
+/* Verbosity levels LOW=info HIGH=info+SQL DEBUG=info+SQL+junk */
+enum debugLevel {OFF, LOW, HIGH, DEBUG, DEVELOP};
+
 
 typedef struct target_struct
 {
@@ -50,13 +60,33 @@ typedef struct target_session_struct
 } target_session_t;
 
 /* Typedefs */
-typedef struct worker_struct {
+typedef struct worker_struct
+{
     int index;
     pthread_t thread;
     struct crew_struct *crew;
 } worker_t;
 
-typedef struct crew_struct {
+typedef struct config_struct {
+//    unsigned int interval;
+//    unsigned long long out_of_range;
+    char dbhost[80];
+    char dbdb[80];
+    char dbuser[80];
+    char dbpass[80];
+    enum debugLevel verbose;
+//    unsigned short withzeros;
+    unsigned short dboff;
+//    unsigned short multiple;
+//    unsigned short snmp_ver;
+//    unsigned short snmp_port;
+//    unsigned short threads;
+//    float highskewslop;
+//    float lowskewslop;
+} config_t;
+
+typedef struct crew_struct
+{
     int work_count;
     worker_t member[MAX_THREADS];
     pthread_mutex_t mutex;
@@ -105,7 +135,7 @@ void *hash_target_file(void *);
 void *hash_target_file2(void *arg);
 
 /* Globals */
-//config_t set;
+config_t set;
 //int lock;
 //int waiting;
 //char config_paths[CONFIG_PATHS][BUFSIZE];

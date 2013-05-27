@@ -10,6 +10,7 @@
 
 extern target_t *Targets;
 extern target_t *current;
+extern MYSQL mysql;
 int active_hosts;			/* hosts that we have not completed */
 int non_repeaters = 0;
 int max_repetitions = 2;
@@ -168,6 +169,100 @@ int print_result (int status, struct snmp_session *sp, struct snmp_pdu *pdu)
 }
 
 /*
+ * store the returned data
+ */
+int store_result (int status, struct snmp_session *sp, struct snmp_pdu *pdu)
+{
+    char buf[1024];
+    char query[BUFSIZE]= {0};
+    char R_key[BUFSIZE]= {0};
+    char R_value[BUFSIZE]= {0};
+    unsigned long long result = 0;
+    struct variable_list *vars;
+    int ix;
+
+    switch (status)
+    {
+    case STAT_SUCCESS:
+        for (vars = pdu->variables; vars; vars = vars->next_variable)
+        {
+            int n;
+            for(int i=0; i < vars->name_length; i++)
+            {
+                //printf("%lu_",vars->name[i]);
+                //strcat(vars->name[i],"_");
+                n = sprintf(R_key,"%s%lu_",R_key,vars->name[i]);
+            }
+            R_key[n-1]='\0';
+            printf("%s\n",R_key);
+            switch (vars->type)
+            {
+                /*
+                 * Switch over vars->type and modify/assign result accordingly.
+                 */
+            case ASN_INTEGER:	//2integer
+            case ASN_COUNTER:	//65integer
+            case ASN_GAUGE:	//66integer
+                result = (unsigned long) *(vars->val.integer);
+                printf ("%llu\n", result);
+                break;
+            case ASN_OCTET_STR:	//4string
+                memcpy(R_value, vars->val.string, vars->val_len);
+                R_value[vars->val_len] = '\0';
+                printf ("%s\n", R_value);
+
+                //memcpy(buf_name, vars->name, (sizeof(oid)*(vars->name_length)));
+
+                break;		//还是直接放入入库函数?
+            case ASN_COUNTER64:	//70counter64->high&low
+                result = vars->val.counter64->high;
+                result = result << 32;
+                result = result + vars->val.counter64->low;
+                printf ("%llu\n", result);
+                break;
+            default:		//err
+                result = (unsigned long) *(vars->val.integer);
+                printf ("%llu\n", result);
+                break;
+            }
+        }
+        /*
+            vp = pdu->variables;
+            if (pdu->errstat == SNMP_ERR_NOERROR)
+            {
+                while (vp)
+                {
+                    snprint_variable(buf, sizeof(buf), vp->name, vp->name_length, vp);
+                    fprintf(stdout, "%s: %s\n", sp->peername, buf);
+                    vp = vp->next_variable;
+                }
+            }
+            else
+            {
+                for (ix = 1; vp && ix != pdu->errindex; vp = vp->next_variable, ix++)
+                    ;
+                if (vp) snprint_objid(buf, sizeof(buf), vp->name, vp->name_length);
+                else
+                    strcpy(buf, "(none)");
+                fprintf(stdout, "%s: %s: %s\n", sp->peername, buf, snmp_errstring(pdu->errstat));
+            }
+        */
+        return 1;
+    case STAT_TIMEOUT:
+        fprintf(stdout, "%s: Timeout\n", sp->peername);
+        return 1;
+    case STAT_ERROR:
+        snmp_perror(sp->peername);
+        return 1;
+    }
+    //snprintf(query, sizeof(query), "INSERT INTO %s VALUES (%d, NOW(), %llu)", entry->table, entry->iid, insert_val);
+    //status = mysql_query(&mysql, query);
+    //if (status)
+    //printf("*** MySQL Error: %s\n", mysql_error(&mysql));
+    return 1;
+}
+
+/*
  * simple synchronous loop
  */
 void *snmp_synchronous (void *arg)
@@ -225,9 +320,9 @@ int asynch_response(int operation, struct snmp_session *sp, int reqid,
     //struct snmp_pdu *req;
 
     if (operation == NETSNMP_CALLBACK_OP_RECEIVED_MESSAGE)
-        print_result(STAT_SUCCESS, /*host->sess*/sp, pdu);
+        store_result(STAT_SUCCESS, /*host->sess*/sp, pdu);
     else
-        print_result(STAT_TIMEOUT, /*host->sess*/sp, pdu);
+        store_result(STAT_TIMEOUT, /*host->sess*/sp, pdu);
 
     /* something went wrong (or end of variables)
      * this host not active any more
