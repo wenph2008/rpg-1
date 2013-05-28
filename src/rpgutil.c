@@ -34,3 +34,11 @@ void config_defaults(config_t * set)
 //   strncpy(config_paths[2], CONFIG_PATH_2, sizeof(config_paths[1]));
    return;
 }
+
+void convert_dot2line()
+{
+    while()
+    {
+
+    }
+}

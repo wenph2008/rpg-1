@@ -1,6 +1,0 @@
-maintest : maintest.o rpghash.o 
-	gcc --std=c99 -g -o maintest maintest.o rpghash.o 
-maintest.o :  maintest.c common.h
-	gcc -c maintest.c
-rpghash.o : rpghash.c rpg.h
-	gcc -c rpghash.c

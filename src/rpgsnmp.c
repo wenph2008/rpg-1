@@ -173,13 +173,16 @@ int print_result (int status, struct snmp_session *sp, struct snmp_pdu *pdu)
  */
 int store_result (int status, struct snmp_session *sp, struct snmp_pdu *pdu)
 {
-    char buf[1024];
+    //char buf[1024];
     char query[BUFSIZE]= {0};
     char R_key[BUFSIZE]= {0};
     char R_value[BUFSIZE]= {0};
+    char ipaddr[BUFSIZE]= {0};
     unsigned long long result = 0;
     struct variable_list *vars;
-    int ix;
+    //int ix;
+    strcpy(ipaddr, sp->peername);
+    printf("%s\n",ipaddr);
 
     switch (status)
     {
@@ -187,14 +190,15 @@ int store_result (int status, struct snmp_session *sp, struct snmp_pdu *pdu)
         for (vars = pdu->variables; vars; vars = vars->next_variable)
         {
             int n;
-            for(int i=0; i < vars->name_length; i++)
+            int i;
+            R_key[0]='\0';
+            for(i=0; i < vars->name_length; i++)
             {
-                //printf("%lu_",vars->name[i]);
-                //strcat(vars->name[i],"_");
                 n = sprintf(R_key,"%s%lu_",R_key,vars->name[i]);
             }
             R_key[n-1]='\0';
             printf("%s\n",R_key);
+
             switch (vars->type)
             {
                 /*
@@ -205,6 +209,13 @@ int store_result (int status, struct snmp_session *sp, struct snmp_pdu *pdu)
             case ASN_GAUGE:	//66integer
                 result = (unsigned long) *(vars->val.integer);
                 printf ("%llu\n", result);
+                /*
+                snprintf(query, sizeof(query), "INSERT INTO %s(R_time, R_key, R_value) VALUES (NOW(), %s, %llu)",
+                         , R_key, result);
+                status = mysql_query(&mysql, query);
+                if (status)
+                    printf("*** MySQL Error: %s\n", mysql_error(&mysql));
+                */
                 break;
             case ASN_OCTET_STR:	//4string
                 memcpy(R_value, vars->val.string, vars->val_len);
