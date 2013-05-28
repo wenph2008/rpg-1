@@ -1,0 +1,31 @@
+#                                               -*- Autoconf -*-
+# Process this file with autoconf to produce a configure script.
+
+AC_PREREQ([2.67])
+AC_INIT([FULL-PACKAGE-NAME], [VERSION], [BUG-REPORT-ADDRESS])
+AC_CONFIG_SRCDIR([include/rpg.h])
+AC_CONFIG_HEADERS([config.h])
+AM_INIT_AUTOMAKE(rpg, 0.3)
+
+# Checks for programs.
+AC_PROG_CC
+
+# Checks for libraries.
+# FIXME: Replace `main' with a function in `-lnetsnmp':
+AC_CHECK_LIB([netsnmp], [main])
+# FIXME: Replace `main' with a function in `-lpthread':
+AC_CHECK_LIB([pthread], [main])
+
+# Checks for header files.
+AC_CHECK_HEADERS([netinet/in.h stdint.h stdlib.h string.h strings.h sys/time.h unistd.h])
+
+# Checks for typedefs, structures, and compiler characteristics.
+AC_TYPE_SIZE_T
+
+# Checks for library functions.
+AC_FUNC_MALLOC
+AC_CHECK_FUNCS([gettimeofday select])
+
+AC_OUTPUT(Makefile
+	  src/Makefile
+	  include/Makefile)
